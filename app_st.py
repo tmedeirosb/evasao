@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Load the data
 @st.cache
 def load_data():
-    df = pd.read_csv("Relatorio-dados.csv")
+    df = pd.read_csv("Relatorio-dados-st.csv")
     df_tec_integrado = df[df['Modalidade'] == 'Técnico Integrado']
     df_tec_integrado['Status'] = df_tec_integrado['Situação no Curso'].apply(lambda x: 'Evasão' if x == 'Evasão' else 'Outro status')
     return df_tec_integrado
