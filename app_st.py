@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Load the data
 df = pd.read_csv("Relatorio-dados-2.csv")
@@ -35,30 +36,23 @@ if visualizar:
         ax.set_title('Evasão por ' + attribute1)
         ax.set_xlabel(attribute1)
         ax.set_ylabel('Evasão')
-        for i, v in enumerate(data_to_plot['Evasão']):
-            ax.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
+        for container in ax.containers:
+            ax.bar_label(container)
 
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
             plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
-            for p in plot.patches:
-                plot.annotate(format(p.get_height(), '.1f'), 
-                              (p.get_x() + p.get_width() / 2., p.get_height()), 
-                              ha = 'center', va = 'center', 
-                              xytext = (0, 10), 
-                              textcoords = 'offset points')
         else:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             df_grouped = df_grouped.divide(df_grouped.sum(axis=1), axis=0)
             df_grouped.plot(kind='bar', stacked=True, ax=ax)
-            for i, v in enumerate(df_grouped['Evasão']):
-                ax.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
         ax.set_title('Evasão por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
         ax.set_ylabel('Evasão')
+        for container in ax.containers:
+            ax.bar_label(container)
 
     # Show the plot
     st.pyplot(fig)
-
 
