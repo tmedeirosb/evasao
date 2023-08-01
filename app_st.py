@@ -46,6 +46,8 @@ if visualizar:
         ax.set_ylabel('Evasão')
         for container in ax.containers:
             ax.bar_label(container)
+        # Add a horizontal line for the mean
+        ax.axhline(y=data_to_plot['Evasão'].mean(), color='r', linestyle='--')
 
     # If the user selects 2 attributes
     else:
@@ -60,6 +62,8 @@ if visualizar:
         ax.set_ylabel('Evasão')
         for container in ax.containers:
             ax.bar_label(container)
+        # Add a horizontal line for the mean
+        ax.axhline(y=df_grouped.mean().mean(), color='r', linestyle='--')
 
     # Show the plot
     st.pyplot(fig)
