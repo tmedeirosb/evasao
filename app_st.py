@@ -25,19 +25,28 @@ if visualizar:
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
         if values_or_percentage == 'Valores Absolutos':
-            df1 = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
+            data_to_plot = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
         else:
-            df1 = df.groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
-        df1['Evasão'].plot(kind='bar')
+            data_to_plot = df.groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
+        data_to_plot['Evasão'].plot(kind='bar')
+        plt.title('Evasão por ' + attribute1)
+        plt.xlabel(attribute1)
+        plt.ylabel('Evasão')
 
     # If the user selects 2 attributes
     else:
+        plt.figure(figsize=(15, 10))
         if values_or_percentage == 'Valores Absolutos':
-            df2 = df.groupby([attribute1, attribute2])['Situação no Curso'].value_counts().unstack().fillna(0)
+            sns.countplot(data=df, x=attribute1, hue=attribute2)
         else:
-            df2 = df.groupby([attribute1, attribute2])['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
-        df2['Evasão'].plot(kind='bar')
+            df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            df_grouped = df_grouped.divide(df_grouped.sum(axis=1), axis=0)
+            df_grouped.plot(kind='bar', stacked=True)
+        plt.title('Evasão por ' + attribute1 + ' e ' + attribute2)
+        plt.xlabel(attribute1)
+        plt.ylabel('Evasão')
 
     # Show the plot
     st.pyplot()
+
 
