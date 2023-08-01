@@ -8,7 +8,7 @@ import numpy as np
 df = pd.read_csv("Relatorio-dados-2.csv")
 
 # Define the options for the attribute selection
-attributes_options = ['teste teste teste', 'Ano Letivo de Previsão de Conclusão', 'Campus', 'Descrição do Curso', 'Ano de Ingresso', 'Modalidade', 'Período Atual']
+attributes_options = ['Ano Letivo de Previsão de Conclusão', 'Campus', 'Descrição do Curso', 'Ano de Ingresso', 'Modalidade', 'Período Atual']
 
 # Add a selectbox for the user to choose between absolute values and percentage
 values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
