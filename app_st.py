@@ -1,56 +1,41 @@
-
 import streamlit as st
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 # Load the data
-@st.cache
-def load_data():
-    df = pd.read_csv("Relatorio-dados-st.csv")
-    df_tec_integrado = df[df['Modalidade'] == 'Técnico Integrado']
-    df_tec_integrado['Status'] = df_tec_integrado['Situação no Curso'].apply(lambda x: 'Evasão' if x == 'Evasão' else 'Outro status')
-    return df_tec_integrado
+xls = pd.ExcelFile('Relatorio-dados-2.xls')
+sheet_names = xls.sheet_names
+df = xls.parse(sheet_names[0])
 
-df = load_data()
+# Add a selectbox for the user to choose the modalidade
+modalidade = st.sidebar.selectbox('Selecione a modalidade:', df['Modalidade'].unique())
 
-# Select the attribute(s)
-attribute1 = st.selectbox('Select the first attribute:', df.columns)
-attribute2 = st.selectbox('Select the second attribute (optional):', [''] + list(df.columns))
+# Filter the data based on the selected modalidade
+df = df[df['Modalidade'] == modalidade]
 
-# Select the display option
-display_option = st.selectbox('Select the display option:', ['Percentage', 'Absolute Value'])
+# Add a selectbox for the user to choose between absolute values and percentage
+values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
 
-# Display the evasion rate or the interaction between the selected attributes and evasion
-if attribute2:
-    st.header(f'Interaction between {attribute1} and {attribute2} and Evasion')
-    if display_option == 'Percentage':
-        evasao_counts = df[df['Status'] == 'Evasão'].groupby([attribute1, attribute2]).size()
-        total_counts = df.groupby([attribute1, attribute2]).size()
-        evasao_rate = (evasao_counts / total_counts) * 100
-        evasao_rate_df = evasao_rate.reset_index()
-        evasao_rate_df.columns = [attribute1, attribute2, 'Evasion Rate (%)']
-        plt.figure(figsize=(10, 6))
-        sns.catplot(x=attribute1, y='Evasion Rate (%)', hue=attribute2, data=evasao_rate_df, kind="bar", palette="muted")
-        plt.xticks(rotation='vertical')
+# Add a selectbox for the user to choose one or two attributes
+option = st.sidebar.selectbox('Selecione o número de atributos:', ['1', '2'])
+
+# If the user selects 1
+if option == '1':
+    attribute1 = st.sidebar.selectbox('Selecione o atributo:', df.columns)
+    if values_or_percentage == 'Valores Absolutos':
+        df1 = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
     else:
-        evasao_counts = df[df['Status'] == 'Evasão'].groupby([attribute1, attribute2]).size()
-        evasao_counts_df = evasao_counts.reset_index()
-        evasao_counts_df.columns = [attribute1, attribute2, 'Evasion Count']
-        plt.figure(figsize=(10, 6))
-        sns.catplot(x=attribute1, y='Evasion Count', hue=attribute2, data=evasao_counts_df, kind="bar", palette="muted")
-        plt.xticks(rotation='vertical')
+        df1 = df.groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
+    df1['Evasão'].plot(kind='bar')
+
+# If the user selects 2
 else:
-    if display_option == 'Percentage':
-        st.header(f'Evasion Rate for {attribute1}')
-        evasao_counts = df[df['Status'] == 'Evasão'].groupby(attribute1).size()
-        total_counts = df.groupby(attribute1).size()
-        evasao_rate = (evasao_counts / total_counts) * 100
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x=evasao_rate.index, y=evasao_rate.values, color='blue')
+    attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', df.columns)
+    attribute2 = st.sidebar.selectbox('Selecione o segundo atributo:', df.columns)
+    if values_or_percentage == 'Valores Absolutos':
+        df2 = df.groupby([attribute1, attribute2])['Situação no Curso'].value_counts().unstack().fillna(0)
     else:
-        st.header(f'Evasion Count for {attribute1}')
-        evasao_counts = df[df['Status'] == 'Evasão'].groupby(attribute1).size()
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x=evasao_counts.index, y=evasao_counts.values, color='blue')
-st.pyplot(plt.gcf())
+        df2 = df.groupby([attribute1, attribute2])['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
+    df2['Evasão'].plot(kind='bar')
+
+# Show the plot
+st.pyplot()
