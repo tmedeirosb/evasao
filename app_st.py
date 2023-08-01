@@ -7,18 +7,15 @@ import numpy as np
 # Load the data
 df = pd.read_csv("Relatorio-dados-2.csv")
 
-# Add a selectbox for the user to choose the modalidade
-modalidade = st.sidebar.selectbox('Selecione a modalidade:', df['Modalidade'].unique())
-
-# Filter the data based on the selected modalidade
-df = df[df['Modalidade'] == modalidade]
+# Define the options for the attribute selection
+attributes_options = ['Ano Letivo de Previsão de Conclusão', 'Campus', 'Descrição do Curso', 'Ano de Ingresso', 'Modalidade', 'Período Atual']
 
 # Add a selectbox for the user to choose between absolute values and percentage
 values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
 
 # Add selectboxes for the user to choose one or two attributes
-attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', df.columns)
-attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', df.columns.insert(0, 'Nenhum'))
+attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', attributes_options)
+attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attributes_options.insert(0, 'Nenhum'))
 
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
@@ -55,4 +52,5 @@ if visualizar:
 
     # Show the plot
     st.pyplot(fig)
+
 
