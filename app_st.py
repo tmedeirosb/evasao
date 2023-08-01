@@ -24,6 +24,7 @@ visualizar = st.sidebar.button('Visualizar')
 
 # If the "Visualizar" button is pressed
 if visualizar:
+    plt.figure(figsize=(15, 10))
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
         if values_or_percentage == 'Valores Absolutos':
@@ -34,21 +35,31 @@ if visualizar:
         plt.title('Evasão por ' + attribute1)
         plt.xlabel(attribute1)
         plt.ylabel('Evasão')
+        for i, v in enumerate(data_to_plot['Evasão']):
+            plt.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
 
     # If the user selects 2 attributes
     else:
-        plt.figure(figsize=(15, 10))
         if values_or_percentage == 'Valores Absolutos':
-            sns.countplot(data=df, x=attribute1, hue=attribute2)
+            plot = sns.countplot(data=df, x=attribute1, hue=attribute2)
+            for p in plot.patches:
+                plot.annotate(format(p.get_height(), '.1f'), 
+                              (p.get_x() + p.get_width() / 2., p.get_height()), 
+                              ha = 'center', va = 'center', 
+                              xytext = (0, 10), 
+                              textcoords = 'offset points')
         else:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             df_grouped = df_grouped.divide(df_grouped.sum(axis=1), axis=0)
             df_grouped.plot(kind='bar', stacked=True)
+            for i, v in enumerate(df_grouped['Evasão']):
+                plt.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
         plt.title('Evasão por ' + attribute1 + ' e ' + attribute2)
         plt.xlabel(attribute1)
         plt.ylabel('Evasão')
 
     # Show the plot
     st.pyplot()
+
 
 
