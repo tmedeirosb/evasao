@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import seaborn as sns
@@ -10,14 +11,15 @@ df = pd.read_csv("Relatorio-dados-2.csv")
 # Define the options for the attribute selection
 attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade']
 
+# Add 'Nenhum' to the options
+attribute_options_with_none = ['Nenhum'] + attributes_options
+
 # Add a selectbox for the user to choose between absolute values and percentage
 values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
 
 # Add selectboxes for the user to choose one or two attributes
 attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', attributes_options)
-
-attribute2_options = ['Nenhum'] + attributes_options
-attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attribute2_options)
+attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attribute_options_with_none)
 
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
@@ -25,6 +27,7 @@ visualizar = st.sidebar.button('Visualizar')
 # If the "Visualizar" button is pressed
 if visualizar:
     fig, ax = plt.subplots(figsize=(15, 10))
+    
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
         if values_or_percentage == 'Valores Absolutos':
