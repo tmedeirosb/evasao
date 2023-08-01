@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Load the data
 df = pd.read_csv("Relatorio-dados-2.csv")
