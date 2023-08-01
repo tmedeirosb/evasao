@@ -14,6 +14,12 @@ attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Le
 # Add 'Nenhum' to the options
 attribute_options_with_none = ['Nenhum'] + attributes_options
 
+# Add a selectbox for the user to choose the modalidade
+modalidade = st.sidebar.selectbox('Selecione a modalidade:', df['Modalidade'].unique())
+
+# Filter the data based on the selected modalidade
+df = df[df['Modalidade'] == modalidade]
+
 # Add a selectbox for the user to choose between absolute values and percentage
 values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
 
