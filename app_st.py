@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load the data
-df = pd.read_excel("Relatorio-dados-2.xls")
+df = pd.read_csv("Relatorio-dados-2.csv")
 
 # Add a selectbox for the user to choose the modalidade
 modalidade = st.sidebar.selectbox('Selecione a modalidade:', df['Modalidade'].unique())
