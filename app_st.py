@@ -15,7 +15,9 @@ values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', 
 
 # Add selectboxes for the user to choose one or two attributes
 attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', attributes_options)
-attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attributes_options.insert(0, 'Nenhum'))
+
+attribute2_options = ['Nenhum'] + attributes_options
+attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attribute2_options)
 
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
