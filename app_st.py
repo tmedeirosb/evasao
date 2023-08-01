@@ -24,24 +24,24 @@ visualizar = st.sidebar.button('Visualizar')
 
 # If the "Visualizar" button is pressed
 if visualizar:
-    plt.figure(figsize=(15, 10))
+    fig, ax = plt.subplots(figsize=(15, 10))
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
         if values_or_percentage == 'Valores Absolutos':
             data_to_plot = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
         else:
             data_to_plot = df.groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0)
-        data_to_plot['Evasão'].plot(kind='bar')
-        plt.title('Evasão por ' + attribute1)
-        plt.xlabel(attribute1)
-        plt.ylabel('Evasão')
+        data_to_plot['Evasão'].plot(kind='bar', ax=ax)
+        ax.set_title('Evasão por ' + attribute1)
+        ax.set_xlabel(attribute1)
+        ax.set_ylabel('Evasão')
         for i, v in enumerate(data_to_plot['Evasão']):
-            plt.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
+            ax.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
 
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            plot = sns.countplot(data=df, x=attribute1, hue=attribute2)
+            plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
             for p in plot.patches:
                 plot.annotate(format(p.get_height(), '.1f'), 
                               (p.get_x() + p.get_width() / 2., p.get_height()), 
@@ -51,15 +51,14 @@ if visualizar:
         else:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             df_grouped = df_grouped.divide(df_grouped.sum(axis=1), axis=0)
-            df_grouped.plot(kind='bar', stacked=True)
+            df_grouped.plot(kind='bar', stacked=True, ax=ax)
             for i, v in enumerate(df_grouped['Evasão']):
-                plt.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
-        plt.title('Evasão por ' + attribute1 + ' e ' + attribute2)
-        plt.xlabel(attribute1)
-        plt.ylabel('Evasão')
+                ax.text(i, v + 0.01, str(round(v, 2)), ha='center', va='bottom', fontsize=10)
+        ax.set_title('Evasão por ' + attribute1 + ' e ' + attribute2)
+        ax.set_xlabel(attribute1)
+        ax.set_ylabel('Evasão')
 
     # Show the plot
-    st.pyplot()
-
+    st.pyplot(fig)
 
 
