@@ -65,7 +65,7 @@ if visualizar:
         if values_or_percentage == 'Valores Absolutos':
             data_to_plot = df[attribute1].value_counts().sort_index()
         else:
-            data_to_plot = (df[attribute1].value_counts() / total_values).sort_index()
+            data_to_plot = (df[attribute1].value_counts() / total_values * 100).sort_index()
         
         data_to_plot.plot(kind='bar', ax=ax, label='Dados')
         
@@ -89,12 +89,12 @@ if visualizar:
         else:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             total_by_group = df.groupby(attribute1).size()
-            df_grouped = df_grouped.divide(total_by_group, axis=0)
+            df_grouped = df_grouped.divide(total_by_group, axis=0) * 100
             df_grouped.plot(kind='bar', stacked=True, ax=ax)
         
         ax.set_title('Status por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Status')
+        ax.set_ylabel('Status (%)')
         for container in ax.containers:
             ax.bar_label(container)
         
@@ -103,4 +103,3 @@ if visualizar:
 
     # Show the plot
     st.pyplot(fig)
-
