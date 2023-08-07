@@ -7,7 +7,7 @@ import numpy as np
 import datetime
 
 # Load the data
-df = pd.read_csv("Relatorio-dados-2.csv")
+df = pd.read_excel("Relatorio-dados-2.xls")
 
 # Define a function to categorize status
 def categorize_status(row):
@@ -27,15 +27,15 @@ def categorize_status(row):
 df['Status'] = df.apply(categorize_status, axis=1)
 
 # Define the options for the attribute selection
-attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Status']
+attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade']
 
-# Add 'Nenhum' to the options
-attribute_options_with_none = ['Nenhum'] + attributes_options
+# Add 'Nenhum' to the options for filters
+filter_options_with_none = ['Nenhum'] + list(df['Modalidade'].unique()) + list(df['Tipo de Escola de Origem'].unique()) + list(df['Status'].unique())
 
 # Add selectboxes for the user to choose filters (with "Nenhum" option)
-modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
-tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
-status_to_display = st.sidebar.selectbox('Selecione o status a ser exibido:', list(df['Status'].unique()))
+modalidade = st.sidebar.selectbox('Selecione a modalidade:', filter_options_with_none)
+tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', filter_options_with_none)
+status_to_display = st.sidebar.selectbox('Selecione o status a ser exibido:', filter_options_with_none)
 
 # Apply filters based on the selected options (skip if "Nenhum" is selected)
 if modalidade != 'Nenhum':
@@ -48,7 +48,7 @@ values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', 
 
 # Add selectboxes for the user to choose one or two attributes
 attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', attributes_options)
-attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', attribute_options_with_none)
+attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', ['Nenhum'] + attributes_options)
 
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
@@ -59,12 +59,12 @@ if visualizar:
     
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
+        grouped_data = df.groupby(attribute1)['Status'].value_counts().unstack().fillna(0)
         if values_or_percentage == 'Valores Absolutos':
-            data_to_plot = df[df['Status'] == status_to_display][attribute1].value_counts().sort_index()
+            data_to_plot = grouped_data[status_to_display]
         else:
-            total_by_group = df.groupby(attribute1).size()
-            status_by_group = df[df['Status'] == status_to_display].groupby(attribute1).size()
-            data_to_plot = (status_by_group / total_by_group * 100).fillna(0).sort_index()
+            total_by_group = grouped_data.sum(axis=1)
+            data_to_plot = (grouped_data[status_to_display] / total_by_group * 100).fillna(0)
         
         data_to_plot.plot(kind='bar', ax=ax, label='Dados')
         
