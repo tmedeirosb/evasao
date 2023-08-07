@@ -9,8 +9,8 @@ import datetime
 # Load the data
 df = pd.read_csv("Relatorio-dados-2.csv")
 
-# Remove rows where "Escola de Origem" is "-"
-df = df[df['Escola de Origem'] != '-']
+# Remove all values from "Tipo de Escola de Origem" that are not "Pública" or "Privada"
+df = df[df['Tipo de Escola de Origem'].isin(['Pública', 'Privada'])]
 
 # Define a function to categorize status
 def categorize_status(row):
@@ -88,7 +88,7 @@ if visualizar:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             total_by_group = df.groupby(attribute1).size()
             df_grouped = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
-            df_grouped.plot(kind='bar', stacked=True, ax=ax)
+            df_grouped.plot(kind='bar', stacked=False, ax=ax)
         
         ax.set_title('Status por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
@@ -101,4 +101,3 @@ if visualizar:
 
     # Show the plot
     st.pyplot(fig)
-
