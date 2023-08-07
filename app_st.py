@@ -7,7 +7,7 @@ import numpy as np
 import datetime
 
 # Load the data
-df = pd.read_excel("Relatorio-dados-2.xls")
+df = pd.read_csv("Relatorio-dados-2.csv")
 
 # Define a function to categorize status
 def categorize_status(row):
