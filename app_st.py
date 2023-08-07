@@ -27,7 +27,7 @@ def categorize_status(row):
 df['Status'] = df.apply(categorize_status, axis=1)
 
 # Define the options for the attribute selection
-attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade']
+attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Escola de Origem']
 
 # Add 'Nenhum' to the options
 attribute_options_with_none = ['Nenhum'] + attributes_options
@@ -80,9 +80,9 @@ if visualizar:
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            plot = sns.countplot(data=df[df['Status'] == status_to_display], x=attribute1, hue=attribute2, ax=ax)
+            plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
         else:
-            df_grouped = df[df['Status'] == status_to_display].groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             total_by_group = df.groupby(attribute1).size()
             df_grouped = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
             df_grouped.plot(kind='bar', stacked=True, ax=ax)
