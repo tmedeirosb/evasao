@@ -35,15 +35,13 @@ attribute_options_with_none = ['Nenhum'] + attributes_options
 # Add selectboxes for the user to choose filters (with "Nenhum" option)
 modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
 tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
-status = st.sidebar.selectbox('Selecione o status:', ['Nenhum'] + list(df['Status'].unique()))
+status_to_display = st.sidebar.selectbox('Selecione o status a ser exibido:', list(df['Status'].unique()))
 
 # Apply filters based on the selected options (skip if "Nenhum" is selected)
 if modalidade != 'Nenhum':
     df = df[df['Modalidade'] == modalidade]
 if tipo_escola_origem != 'Nenhum':
     df = df[df['Tipo de Escola de Origem'] == tipo_escola_origem]
-if status != 'Nenhum':
-    df = df[df['Status'] == status]
 
 # Add a selectbox for the user to choose between absolute values and percentage
 values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
@@ -61,21 +59,18 @@ if visualizar:
     
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
-        total_values = df[attribute1].value_counts().sum()
         if values_or_percentage == 'Valores Absolutos':
-            data_to_plot = df[attribute1].value_counts().sort_index()
+            data_to_plot = df[df['Status'] == status_to_display][attribute1].value_counts().sort_index()
         else:
-            data_to_plot = (df[attribute1].value_counts() / total_values * 100).sort_index()
+            total_by_group = df.groupby(attribute1).size()
+            status_by_group = df[df['Status'] == status_to_display].groupby(attribute1).size()
+            data_to_plot = (status_by_group / total_by_group * 100).fillna(0).sort_index()
         
         data_to_plot.plot(kind='bar', ax=ax, label='Dados')
         
-        # Add a bar for the total values
-        if values_or_percentage == 'Valores Absolutos':
-            ax.bar('Total', total_values, color='grey', label='Total')
-        
         ax.set_title('Status por ' + attribute1)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Status')
+        ax.set_ylabel('Status (%)')
         for container in ax.containers:
             ax.bar_label(container)
         
@@ -85,11 +80,11 @@ if visualizar:
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
+            plot = sns.countplot(data=df[df['Status'] == status_to_display], x=attribute1, hue=attribute2, ax=ax)
         else:
-            df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            df_grouped = df[df['Status'] == status_to_display].groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             total_by_group = df.groupby(attribute1).size()
-            df_grouped = df_grouped.divide(total_by_group, axis=0) * 100
+            df_grouped = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
             df_grouped.plot(kind='bar', stacked=True, ax=ax)
         
         ax.set_title('Status por ' + attribute1 + ' e ' + attribute2)
