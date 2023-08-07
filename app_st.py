@@ -30,7 +30,7 @@ def categorize_status(row):
 df['Status'] = df.apply(categorize_status, axis=1)
 
 # Define the options for the attribute selection
-attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Escola de Origem']
+attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Tipo de Escola de Origem']
 
 # Add 'Nenhum' to the options
 attribute_options_with_none = ['Nenhum'] + attributes_options
