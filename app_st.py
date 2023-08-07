@@ -9,6 +9,9 @@ import datetime
 # Load the data
 df = pd.read_csv("Relatorio-dados-2.csv")
 
+# Remove rows where "Escola de Origem" is "-"
+df = df[df['Escola de Origem'] != '-']
+
 # Define a function to categorize status
 def categorize_status(row):
     today_year = datetime.datetime.now().year
@@ -98,3 +101,4 @@ if visualizar:
 
     # Show the plot
     st.pyplot(fig)
+
