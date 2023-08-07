@@ -29,13 +29,13 @@ df['Status'] = df.apply(categorize_status, axis=1)
 # Define the options for the attribute selection
 attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade']
 
-# Add 'Nenhum' to the options for filters
-filter_options_with_none = ['Nenhum'] + list(df['Modalidade'].unique()) + list(df['Tipo de Escola de Origem'].unique()) + list(df['Status'].unique())
+# Add 'Nenhum' to the options
+attribute_options_with_none = ['Nenhum'] + attributes_options
 
 # Add selectboxes for the user to choose filters (with "Nenhum" option)
-modalidade = st.sidebar.selectbox('Selecione a modalidade:', filter_options_with_none)
-tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', filter_options_with_none)
-status_to_display = st.sidebar.selectbox('Selecione o status a ser exibido:', filter_options_with_none)
+modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
+tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
+status_to_display = st.sidebar.selectbox('Selecione o status a ser exibido:', list(df['Status'].unique()))
 
 # Apply filters based on the selected options (skip if "Nenhum" is selected)
 if modalidade != 'Nenhum':
