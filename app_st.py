@@ -80,3 +80,67 @@ if selected_tab == "Agregação por Situação no Curso":
 
 elif selected_tab == "Interação entre variáveis":
     st.write("Esta aba está em desenvolvimento.")
+    
+    # Filter Base section
+    st.sidebar.subheader("Filtrar base")
+    filters = {}
+    for attribute in attributes_options:
+        selected_value = st.sidebar.selectbox(f'Selecione {attribute} (opcional):', ['Nenhum'] + list(df[attribute].unique()))
+        if selected_value != 'Nenhum':
+            filters[attribute] = selected_value
+    df = df[df[list(filters)].isin(filters).all(axis=1)]
+    
+    # Visualization section
+    st.sidebar.subheader("Visualização")
+    situacoes_to_display = st.sidebar.multiselect('Selecione as situações a serem exibidas:', list(df['Situação no Curso'].unique()))
+    values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
+
+    # Interact Variables section
+    st.sidebar.subheader("Interação variáveis")
+    attribute1 = st.sidebar.selectbox('Seleção do atributo 1:', attributes_options)
+    values_attribute1 = st.sidebar.multiselect(f'Valores de {attribute1} (opcional):', list(df[attribute1].unique()))
+    if len(values_attribute1) > 0:
+        df = df[df[attribute1].isin(values_attribute1)]
+    
+    attribute2 = st.sidebar.selectbox('Seleção do atributo 2:', attributes_options)
+    values_attribute2 = st.sidebar.multiselect(f'Valores condicionados de {attribute2} (opcional):', list(df[attribute2].unique()))
+
+    if len(values_attribute2) > 0:
+        df = df[df[attribute2].isin(values_attribute2)]
+    
+    # Visualization button
+    visualizar = st.sidebar.button('Visualizar')
+
+    # If the "Visualizar" button is pressed
+    if visualizar:
+        fig, ax = plt.subplots(figsize=(15, 10))
+
+        if values_or_percentage == 'Valores Absolutos':
+            plot = sns.countplot(data=df[df['Situação no Curso'].isin(situacoes_to_display)], x=attribute2, hue='Situação no Curso', order=df[attribute2].value_counts().index, ax=ax)
+            table_data = df.groupby(attribute2)['Situação no Curso'].value_counts().unstack().fillna(0)
+        else:
+            # For percentage, we need to adjust the data
+            total_counts = df[attribute2].value_counts()
+            status_counts = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute2)['Situação no Curso'].value_counts()
+            status_percentage = status_counts.div(total_counts, level=0) * 100
+            status_percentage = status_percentage.reset_index(name='Percentage')
+            plot = sns.barplot(data=status_percentage, x=attribute2, y='Percentage', hue='Situação no Curso', order=df[attribute2].value_counts().index, ax=ax)
+            table_data = status_percentage.pivot(index=attribute2, columns='Situação no Curso', values='Percentage')
+
+        ax.set_title(f'Situação no Curso por {attribute2} filtrado por {attribute1}')
+        ax.set_xlabel(attribute2)
+        ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
+        ax.legend(title='Situação no Curso')
+
+        # Display the values on top of each bar
+        for p in plot.patches:
+            plot.annotate(format(p.get_height(), '.1f'), (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+
+        # Show the plot
+        st.pyplot(fig)
+
+        # Add totals to the table data and display it
+        table_data['Total'] = table_data.sum(axis=1)
+        table_data.loc['Total'] = table_data.sum()
+        st.write(table_data)
+
