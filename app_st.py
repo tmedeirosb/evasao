@@ -56,6 +56,9 @@ attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', ['
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
 
+# Create a variable to store the data for the table
+table_data = None
+
 # If the "Visualizar" button is pressed
 if visualizar:
     fig, ax = plt.subplots(figsize=(15, 10))
@@ -79,16 +82,21 @@ if visualizar:
         
         # Add a horizontal line for the mean
         ax.axhline(y=data_to_plot.mean(), color='r', linestyle='--')
+        
+        # Store the data for the table
+        table_data = grouped_data
 
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
             plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
+            table_data = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
         else:
             df_grouped = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
             total_by_group = df.groupby(attribute1).size()
             df_grouped = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
             df_grouped.plot(kind='bar', stacked=False, ax=ax)
+            table_data = df_grouped
         
         ax.set_title('Status por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
@@ -101,3 +109,10 @@ if visualizar:
 
     # Show the plot
     st.pyplot(fig)
+    
+    # Display the table data
+    if table_data is not None:
+        table_data['Total'] = table_data.sum(axis=1)
+        table_data.loc['Total'] = table_data.sum()
+        st.write(table_data)
+
