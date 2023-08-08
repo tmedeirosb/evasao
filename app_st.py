@@ -91,6 +91,9 @@ if visualizar:
     # Show the plot
     st.pyplot(fig)
 
-    # Display the table data
+    # Add totals to the table data
     if table_data is not None:
+        table_data['Total'] = table_data.sum(axis=1)
+        table_data.loc['Total'] = table_data.sum()
         st.write(table_data)
+
