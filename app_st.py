@@ -47,6 +47,8 @@ if selected_tab == "Agregação por Situação no Curso":
         # Botão para visualizar
         visualize_button = st.button('Visualizar')
 
+        st.write("\n \n \n \n \n \n \n")
+
     # Main content
     if visualize_button:
         # Filtering data based on selected attributes
@@ -65,15 +67,3 @@ if selected_tab == "Agregação por Situação no Curso":
         table_data['Total'] = table_data.sum(axis=1)
         table_data.loc['Total'] = table_data.sum()
         st.write(table_data)
-
-    # Adjusting the sidebar scroll
-    st.markdown("""
-        <style>
-            .sidebar .sidebar-content {
-                height: auto !important;
-                overflow: auto;
-                width: 330px;
-                position: fixed;
-            }
-        </style>
-        """, unsafe_allow_html=True)
