@@ -21,45 +21,54 @@ selected_tab = st.sidebar.radio("Escolha uma aba:", tabs)
 
 if selected_tab == "Agregação por Situação no Curso":
 
-    with st.sidebar.container():
-        st.sidebar.header("Visualização")
+    # Sidebar
+    with st.sidebar:
+        st.header("Visualização")
 
         # Situação do curso
-        situation = st.sidebar.selectbox('Selecione a situação do curso:', df['Situação no Curso'].unique())
+        situation = st.selectbox('Selecione a situação do curso:', df['Situação no Curso'].unique())
 
         # Valores absolutos ou porcentagem
-        values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
+        values_or_percentage = st.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
 
-        st.sidebar.header("Interação variáveis")
+        st.header("Interação variáveis")
 
         # Seleção de atributos para interação
-        attribute1 = st.sidebar.selectbox('Seleção do atributo 1:', attributes_options)
-        attribute_values_1 = st.sidebar.multiselect(f'Valores para {attribute1}:', df[attribute1].unique())
+        attribute1 = st.selectbox('Seleção do atributo 1:', attributes_options)
+        attribute_values_1 = st.multiselect(f'Valores para {attribute1}:', df[attribute1].unique())
 
-        attribute2 = st.sidebar.selectbox('Seleção do atributo 2:', attributes_options)
+        attribute2 = st.selectbox('Seleção do atributo 2:', attributes_options)
         if attribute_values_1:
             df_filtered_by_attr1 = df[df[attribute1].isin(attribute_values_1)]
-            attribute_values_2 = st.sidebar.multiselect(f'Valores para {attribute2} (baseado em {attribute1}):', df_filtered_by_attr1[attribute2].unique())
+            attribute_values_2 = st.multiselect(f'Valores para {attribute2} (baseado em {attribute1}):', df_filtered_by_attr1[attribute2].unique())
         else:
             attribute_values_2 = []
 
         # Botão para visualizar
-        if st.sidebar.button('Visualizar'):
-            pass  # Restante do código...
+        visualize_button = st.button('Visualizar')
 
-    # Adicionando estilização para ter uma barra de rolagem no sidebar
+    # Main content
+    if visualize_button:
+        # Filtering data based on selected attributes
+        df_filtered = df[df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2)]
+
+        # Plot
+        fig, ax = plt.subplots(figsize=(15, 10))
+        sns.countplot(data=df_filtered, x=attribute2, hue=situation, ax=ax)
+        ax.set_title(f"{situation} por {attribute2}")
+        for container in ax.containers:
+            ax.bar_label(container)
+        st.pyplot(fig)
+
+        # Display table
+        table_data = df_filtered.groupby([attribute2])[situation].value_counts().unstack().fillna(0)
+        table_data['Total'] = table_data.sum(axis=1)
+        table_data.loc['Total'] = table_data.sum()
+        st.write(table_data)
+
+    # Adjusting the sidebar scroll
     st.markdown("""
         <style>
-            .reportview-container .main .block-container {
-                max-width: 100%;
-                padding-top: 1rem;
-                padding-right: 1rem;
-                padding-left: 1rem;
-                padding-bottom: 1rem;
-            }
-            div.stButton > button:first-child {
-                width: 100%;
-            }
             .sidebar .sidebar-content {
                 height: auto !important;
                 overflow: auto;
