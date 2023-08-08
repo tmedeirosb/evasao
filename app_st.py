@@ -15,13 +15,10 @@ df = df[df['Tipo de Escola de Origem'].isin(['Pública', 'Privada'])]
 # Define the options for the attribute selection
 attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Tipo de Escola de Origem']
 
-# Add 'Nenhum' to the options
-attribute_options_with_none = ['Nenhum'] + attributes_options
-
-# Add selectboxes for the user to choose filters (with "Nenhum" option)
+# Add multiselect for the user to choose filters (with "Nenhum" option)
 modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
 tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
-situacao_to_display = st.sidebar.selectbox('Selecione a situação a ser exibida:', list(df['Situação no Curso'].unique()))
+situacoes_to_display = st.sidebar.multiselect('Selecione as situações a serem exibidas:', list(df['Situação no Curso'].unique()))
 
 # Apply filters based on the selected options (skip if "Nenhum" is selected)
 if modalidade != 'Nenhum':
@@ -46,20 +43,26 @@ table_data = None
 if visualizar:
     fig, ax = plt.subplots(figsize=(15, 10))
     
+    # Adjust data visualization based on the selected "Situações no Curso"
+    if situacoes_to_display:
+        display_df = df[df['Situação no Curso'].isin(situacoes_to_display)]
+    else:
+        display_df = df.copy()
+
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
-        grouped_data = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
+        grouped_data = display_df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
         if values_or_percentage == 'Valores Absolutos':
-            data_to_plot = grouped_data[situacao_to_display]
+            data_to_plot = grouped_data.sum(axis=1)
         else:
             total_by_group = grouped_data.sum(axis=1)
-            data_to_plot = (grouped_data[situacao_to_display] / total_by_group * 100).fillna(0)
+            data_to_plot = grouped_data.divide(total_by_group, axis=0).sum(axis=1) * 100
         
         data_to_plot.plot(kind='bar', ax=ax, label='Dados')
         
         ax.set_title('Situação no Curso por ' + attribute1)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Situação (%)')
+        ax.set_ylabel('Quantidade')
         for container in ax.containers:
             ax.bar_label(container)
         
@@ -72,21 +75,21 @@ if visualizar:
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            plot = sns.countplot(data=df[df['Situação no Curso'] == situacao_to_display], x=attribute1, hue=attribute2, ax=ax)
-            table_data = df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            plot = sns.countplot(data=display_df, x=attribute1, hue=attribute2, ax=ax)
+            table_data = display_df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
         else:
-            df_grouped = df[df['Situação no Curso'] == situacao_to_display].groupby([attribute1, attribute2]).size().unstack(fill_value=0)
-            total_by_group = df.groupby(attribute1).size()
-            df_grouped = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
+            df_grouped = display_df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            total_by_group = display_df.groupby(attribute1).size()
+            df_grouped = df_grouped.divide(total_by_group, axis=0) * 100
             df_grouped.plot(kind='bar', stacked=False, ax=ax)
             table_data = df_grouped
-        
+
         ax.set_title('Situação no Curso por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Situação (%)')
+        ax.set_ylabel('Percentual')
         for container in ax.containers:
             ax.bar_label(container)
-        
+
         # Add a horizontal line for the mean
         ax.axhline(y=df_grouped.mean().mean(), color='r', linestyle='--')
 
