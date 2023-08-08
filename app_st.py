@@ -36,58 +36,62 @@ attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', ['
 # Add a "Visualizar" button
 visualizar = st.sidebar.button('Visualizar')
 
-# Create a variable to store the data for the table
-table_data = None
-
 # If the "Visualizar" button is pressed
 if visualizar:
     fig, ax = plt.subplots(figsize=(15, 10))
-    
+
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
         if values_or_percentage == 'Valores Absolutos':
-            sns.countplot(data=df, x=attribute1, hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
+            plot = sns.countplot(data=df, x=attribute1, hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
         else:
             # For percentage, we need to adjust the data
             total_counts = df[attribute1].value_counts()
             status_counts = df.groupby(attribute1)['Situação no Curso'].value_counts()
             status_percentage = status_counts.div(total_counts, level=0) * 100
             status_percentage = status_percentage.reset_index(name='Percentage')
-            sns.barplot(data=status_percentage, x=attribute1, y='Percentage', hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
-        
+            plot = sns.barplot(data=status_percentage, x=attribute1, y='Percentage', hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
+
         ax.set_title('Situação no Curso por ' + attribute1)
         ax.set_xlabel(attribute1)
         ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
         ax.legend(title='Situação no Curso')
 
+        # Add a horizontal line for the mean
+        if values_or_percentage == 'Valores Absolutos':
+            ax.axhline(y=df[attribute1].value_counts().mean(), color='r', linestyle='--')
+        else:
+            ax.axhline(y=status_percentage['Percentage'].mean(), color='r', linestyle='--')
+
+        # Display the values on top of each bar
+        for p in plot.patches:
+            plot.annotate(format(p.get_height(), '.1f'), (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+    
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
+            plot = sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
         else:
             total_counts = df[attribute1].value_counts()
             attribute2_counts = df.groupby(attribute1)[attribute2].value_counts()
             attribute2_percentage = attribute2_counts.div(total_counts, level=0) * 100
             attribute2_percentage = attribute2_percentage.reset_index(name='Percentage')
-            sns.barplot(data=attribute2_percentage, x=attribute1, y='Percentage', hue=attribute2, ax=ax)
+            plot = sns.barplot(data=attribute2_percentage, x=attribute1, y='Percentage', hue=attribute2, ax=ax)
 
-        ax.set_title('Situação no Curso por ' + attribute1 + ' e ' + attribute2)
+        ax.set_title(attribute2 + ' por ' + attribute1)
         ax.set_xlabel(attribute1)
         ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
         ax.legend(title=attribute2)
 
+        # Add a horizontal line for the mean
+        if values_or_percentage == 'Valores Absolutos':
+            ax.axhline(y=df[attribute1].value_counts().mean(), color='r', linestyle='--')
+        else:
+            ax.axhline(y=attribute2_percentage['Percentage'].mean(), color='r', linestyle='--')
+
+        # Display the values on top of each bar
+        for p in plot.patches:
+            plot.annotate(format(p.get_height(), '.1f'), (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
+
     # Show the plot
     st.pyplot(fig)
-
-    # Display the table data
-    if values_or_percentage == 'Valores Absolutos':
-        table_data = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
-    else:
-        total_counts = df[attribute1].value_counts()
-        status_counts = df.groupby(attribute1)['Situação no Curso'].value_counts()
-        table_data = (status_counts.div(total_counts, level=0) * 100).unstack().fillna(0)
-
-    if table_data is not None:
-        table_data['Total'] = table_data.sum(axis=1)
-        table_data.loc['Total'] = table_data.sum()
-        st.write(table_data)
