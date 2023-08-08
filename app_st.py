@@ -80,14 +80,12 @@ if selected_tab == "Agregação por Situação no Curso":
 
 elif selected_tab == "Interação entre variáveis":
     
-    st.sidebar.header("Visualização")
     # Situação do curso
     situation = st.sidebar.selectbox('Selecione a situação do curso:', df['Situação no Curso'].unique())
 
     # Valores absolutos ou porcentagem
     values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
     
-    st.sidebar.header("Interação variáveis")
     # Seleção de atributos para interação
     attribute1 = st.sidebar.selectbox('Seleção do atributo 1:', attributes_options)
     attribute_values_1 = st.sidebar.multiselect(f'Valores para {attribute1}:', df[attribute1].unique())
