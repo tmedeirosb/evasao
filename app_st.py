@@ -15,95 +15,68 @@ df = df[df['Tipo de Escola de Origem'].isin(['Pública', 'Privada'])]
 # Define the options for the attribute selection
 attributes_options = ['Código Curso', 'Campus', 'Descrição do Curso', 'Ano Letivo de Previsão de Conclusão', 'Ano de Ingresso', 'Período Atual', 'Modalidade', 'Tipo de Escola de Origem']
 
-# Tab selection
-tab_selection = st.sidebar.radio("Selecione a aba", ['Aba 1', 'Aba 2'])
+# Tabs
+tabs = ["Agregação por Situação no Curso", "Interação entre variáveis"]
+selected_tab = st.sidebar.radio("Escolha uma aba:", tabs)
 
-# Common sidebar components
-modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
-tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
-situacoes_to_display = st.sidebar.multiselect('Selecione as situações a serem exibidas:', list(df['Situação no Curso'].unique()))
+if selected_tab == "Agregação por Situação no Curso":
 
-# Apply filters based on the selected options (skip if "Nenhum" is selected)
-if modalidade != 'Nenhum':
-    df = df[df['Modalidade'] == modalidade]
-if tipo_escola_origem != 'Nenhum':
-    df = df[df['Tipo de Escola de Origem'] == tipo_escola_origem]
+    # Add multiselect for the user to choose filters (with "Nenhum" option)
+    modalidade = st.sidebar.selectbox('Selecione a modalidade:', ['Nenhum'] + list(df['Modalidade'].unique()))
+    tipo_escola_origem = st.sidebar.selectbox('Selecione o tipo de escola de origem:', ['Nenhum'] + list(df['Tipo de Escola de Origem'].unique()))
+    situacoes_to_display = st.sidebar.multiselect('Selecione as situações a serem exibidas:', list(df['Situação no Curso'].unique()))
 
-values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
-visualizar = st.sidebar.button('Visualizar')
+    # Apply filters based on the selected options (skip if "Nenhum" is selected)
+    if modalidade != 'Nenhum':
+        df = df[df['Modalidade'] == modalidade]
+    if tipo_escola_origem != 'Nenhum':
+        df = df[df['Tipo de Escola de Origem'] == tipo_escola_origem]
 
-if tab_selection == 'Aba 1':
+    # Add a selectbox for the user to choose between absolute values and percentage
+    values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
+
+    # Add selectbox for the user to choose one attribute
     attribute1 = st.sidebar.selectbox('Selecione o atributo:', attributes_options)
 
-    # Logic for visualization in Aba 1
+    # Add a "Visualizar" button
+    visualizar = st.sidebar.button('Visualizar')
+
+    # Variable to store table data
+    table_data = None
+
+    # If the "Visualizar" button is pressed
     if visualizar:
         fig, ax = plt.subplots(figsize=(15, 10))
-        
+
         if values_or_percentage == 'Valores Absolutos':
-            data_to_plot = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
-            data_to_plot.plot(kind='bar', ax=ax)
-            ax.set_ylabel('Quantidade')
+            plot = sns.countplot(data=df, x=attribute1, hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
+            table_data = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
         else:
-            data_to_plot_percentage = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0) * 100
-            data_to_plot_percentage.plot(kind='bar', ax=ax)
-            ax.set_ylabel('Porcentagem (%)')
+            # For percentage, we need to adjust the data
+            total_counts = df[attribute1].value_counts()
+            status_counts = df.groupby(attribute1)['Situação no Curso'].value_counts()
+            status_percentage = status_counts.div(total_counts, level=0) * 100
+            status_percentage = status_percentage.reset_index(name='Percentage')
+            plot = sns.barplot(data=status_percentage, x=attribute1, y='Percentage', hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
+            table_data = status_percentage.pivot(index=attribute1, columns='Situação no Curso', values='Percentage')
 
         ax.set_title('Situação no Curso por ' + attribute1)
         ax.set_xlabel(attribute1)
-        for container in ax.containers:
-            ax.bar_label(container)
+        ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
+        ax.legend(title='Situação no Curso')
+
+        # Display the values on top of each bar
+        for p in plot.patches:
+            plot.annotate(format(p.get_height(), '.1f'), (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='center', xytext=(0, 10), textcoords='offset points')
 
         # Show the plot
         st.pyplot(fig)
-        
-        # Display data table
-        data_to_plot['Total'] = data_to_plot.sum(axis=1)
-        data_to_plot.loc['Total'] = data_to_plot.sum()
-        st.write(data_to_plot)
 
-elif tab_selection == 'Aba 2':
-    attribute1 = st.sidebar.selectbox('Selecione o primeiro atributo:', attributes_options)
-    attribute2 = st.sidebar.selectbox('Selecione o segundo atributo (opcional):', ['Nenhum'] + attributes_options)
+        # Add totals to the table data
+        if table_data is not None:
+            table_data['Total'] = table_data.sum(axis=1)
+            table_data.loc['Total'] = table_data.sum()
+            st.write(table_data)
 
-    # Logic for visualization in Aba 2
-    if visualizar:
-        fig, ax = plt.subplots(figsize=(15, 10))
-        
-        if attribute2 == 'Nenhum':
-            data_to_plot = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
-            if values_or_percentage == 'Valores Absolutos':
-                data_to_plot.plot(kind='bar', ax=ax)
-                ax.set_ylabel('Quantidade')
-            else:
-                data_to_plot_percentage = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute1)['Situação no Curso'].value_counts(normalize=True).unstack().fillna(0) * 100
-                data_to_plot_percentage.plot(kind='bar', ax=ax)
-                ax.set_ylabel('Porcentagem (%)')
-            
-            ax.set_title('Situação no Curso por ' + attribute1)
-            ax.set_xlabel(attribute1)
-            for container in ax.containers:
-                ax.bar_label(container)
-
-        else:
-            if values_or_percentage == 'Valores Absolutos':
-                sns.countplot(data=df[df['Situação no Curso'].isin(situacoes_to_display)], x=attribute1, hue=attribute2, ax=ax)
-            else:
-                # Complex normalization logic for percentage visualization
-                df_grouped = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby([attribute1, attribute2]).size().unstack(fill_value=0)
-                total_by_group = df[df['Situação no Curso'].isin(situacoes_to_display)].groupby(attribute1).size()
-                df_grouped_percentage = (df_grouped.divide(total_by_group, axis=0) * 100).fillna(0)
-                df_grouped_percentage.plot(kind='bar', ax=ax)
-                ax.set_ylabel('Porcentagem (%)')
-            
-            ax.set_title('Situação no Curso por ' + attribute1 + ' e ' + attribute2)
-            ax.set_xlabel(attribute1)
-            for container in ax.containers:
-                ax.bar_label(container)
-
-        # Show the plot
-        st.pyplot(fig)
-        
-        # Display data table
-        data_to_plot['Total'] = data_to_plot.sum(axis=1)
-        data_to_plot.loc['Total'] = data_to_plot.sum()
-        st.write(data_to_plot)
+elif selected_tab == "Interação entre variáveis":
+    st.write("Esta aba está em desenvolvimento.")
