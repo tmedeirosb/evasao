@@ -104,7 +104,7 @@ elif selected_tab == "Interação entre variáveis":
 
         # Botão para visualizar
         if st.sidebar.button('Visualizar'):
-            # Restante do código...
+            pass  # Restante do código...
 
     # Adicionando estilização para ter uma barra de rolagem no sidebar
     st.markdown("""
@@ -127,3 +127,4 @@ elif selected_tab == "Interação entre variáveis":
             }
         </style>
         """, unsafe_allow_html=True)
+
