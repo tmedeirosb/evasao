@@ -43,60 +43,50 @@ table_data = None
 if visualizar:
     fig, ax = plt.subplots(figsize=(15, 10))
     
-    # Adjust data visualization based on the selected "Situações no Curso"
-    if situacoes_to_display:
-        display_df = df[df['Situação no Curso'].isin(situacoes_to_display)]
-    else:
-        display_df = df.copy()
-
     # If the user selects only 1 attribute
     if attribute2 == 'Nenhum':
-        grouped_data = display_df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
         if values_or_percentage == 'Valores Absolutos':
-            data_to_plot = grouped_data.sum(axis=1)
+            sns.countplot(data=df, x=attribute1, hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
         else:
-            total_by_group = grouped_data.sum(axis=1)
-            data_to_plot = grouped_data.divide(total_by_group, axis=0).sum(axis=1) * 100
-        
-        data_to_plot.plot(kind='bar', ax=ax, label='Dados')
+            # For percentage, we need to adjust the data
+            total_counts = df[attribute1].value_counts()
+            status_counts = df.groupby(attribute1)['Situação no Curso'].value_counts()
+            status_percentage = status_counts.div(total_counts, level=0) * 100
+            status_percentage = status_percentage.reset_index(name='Percentage')
+            sns.barplot(data=status_percentage, x=attribute1, y='Percentage', hue='Situação no Curso', order=df[attribute1].value_counts().index, hue_order=situacoes_to_display, ax=ax)
         
         ax.set_title('Situação no Curso por ' + attribute1)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Quantidade')
-        for container in ax.containers:
-            ax.bar_label(container)
-        
-        # Add a horizontal line for the mean
-        ax.axhline(y=data_to_plot.mean(), color='r', linestyle='--')
-
-        # Store the data for the table
-        table_data = grouped_data
+        ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
+        ax.legend(title='Situação no Curso')
 
     # If the user selects 2 attributes
     else:
         if values_or_percentage == 'Valores Absolutos':
-            plot = sns.countplot(data=display_df, x=attribute1, hue=attribute2, ax=ax)
-            table_data = display_df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
+            sns.countplot(data=df, x=attribute1, hue=attribute2, ax=ax)
         else:
-            df_grouped = display_df.groupby([attribute1, attribute2]).size().unstack(fill_value=0)
-            total_by_group = display_df.groupby(attribute1).size()
-            df_grouped = df_grouped.divide(total_by_group, axis=0) * 100
-            df_grouped.plot(kind='bar', stacked=False, ax=ax)
-            table_data = df_grouped
+            total_counts = df[attribute1].value_counts()
+            attribute2_counts = df.groupby(attribute1)[attribute2].value_counts()
+            attribute2_percentage = attribute2_counts.div(total_counts, level=0) * 100
+            attribute2_percentage = attribute2_percentage.reset_index(name='Percentage')
+            sns.barplot(data=attribute2_percentage, x=attribute1, y='Percentage', hue=attribute2, ax=ax)
 
         ax.set_title('Situação no Curso por ' + attribute1 + ' e ' + attribute2)
         ax.set_xlabel(attribute1)
-        ax.set_ylabel('Percentual')
-        for container in ax.containers:
-            ax.bar_label(container)
-
-        # Add a horizontal line for the mean
-        ax.axhline(y=df_grouped.mean().mean(), color='r', linestyle='--')
+        ax.set_ylabel('Quantidade' if values_or_percentage == 'Valores Absolutos' else 'Percentual (%)')
+        ax.legend(title=attribute2)
 
     # Show the plot
     st.pyplot(fig)
 
     # Display the table data
+    if values_or_percentage == 'Valores Absolutos':
+        table_data = df.groupby(attribute1)['Situação no Curso'].value_counts().unstack().fillna(0)
+    else:
+        total_counts = df[attribute1].value_counts()
+        status_counts = df.groupby(attribute1)['Situação no Curso'].value_counts()
+        table_data = (status_counts.div(total_counts, level=0) * 100).unstack().fillna(0)
+
     if table_data is not None:
         table_data['Total'] = table_data.sum(axis=1)
         table_data.loc['Total'] = table_data.sum()
