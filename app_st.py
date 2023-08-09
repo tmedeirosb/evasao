@@ -80,12 +80,14 @@ if selected_tab == "Agregação por Situação no Curso":
 
 elif selected_tab == "Interação entre variáveis":
     
+    st.sidebar.header("Visualização")
     # Situação do curso
     situation = st.sidebar.selectbox('Selecione a situação do curso:', df['Situação no Curso'].unique())
 
     # Valores absolutos ou porcentagem
     values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
     
+    st.sidebar.header("Interação variáveis")
     # Seleção de atributos para interação
     attribute1 = st.sidebar.selectbox('Seleção do atributo 1:', attributes_options)
     attribute_values_1 = st.sidebar.multiselect(f'Valores para {attribute1}:', df[attribute1].unique())
@@ -101,14 +103,12 @@ elif selected_tab == "Interação entre variáveis":
     if st.sidebar.button('Visualizar'):
         if attribute_values_1 and attribute_values_2:
             fig, ax = plt.subplots(figsize=(15, 10))
-            data = df[(df['Situação no Curso'] == situation) & df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2)]
-            grouped_data = data.groupby(attribute2)[attribute1].value_counts().unstack().fillna(0)
+            data = df[df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2)]
             if values_or_percentage == 'Valores Absolutos':
-                data_to_plot = grouped_data
+                sns.countplot(data=data, x=attribute2, hue=attribute1, ax=ax)
             else:
-                total_by_group = grouped_data.sum(axis=1)
-                data_to_plot = (grouped_data.T / total_by_group * 100).T.fillna(0)
-            data_to_plot.plot(kind='bar', ax=ax)
+                df_grouped = data.groupby(attribute2)[attribute1].value_counts(normalize=True).unstack().fillna(0) * 100
+                df_grouped.plot(kind='bar', stacked=False, ax=ax)
             ax.set_title(f'{attribute1} por {attribute2} (Situação: {situation})')
             ax.set_xlabel(attribute2)
             ax.set_ylabel('Count' if values_or_percentage == 'Valores Absolutos' else 'Percentage (%)')
@@ -116,8 +116,9 @@ elif selected_tab == "Interação entre variáveis":
                 ax.bar_label(container)
             st.pyplot(fig)
             # Exibindo a tabela
-            grouped_data['Total'] = grouped_data.sum(axis=1)
-            grouped_data.loc['Total'] = grouped_data.sum()
-            st.write(grouped_data)
+            table = data.groupby([attribute2, attribute1]).size().unstack().fillna(0)
+            table['Total'] = table.sum(axis=1)
+            table.loc['Total'] = table.sum()
+            st.write(table)
         else:
             st.warning("Por favor, selecione valores para os atributos.")
