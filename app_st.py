@@ -105,10 +105,12 @@ elif selected_tab == "Interação entre variáveis":
             fig, ax = plt.subplots(figsize=(15, 10))
             data = df[df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2)]
             if values_or_percentage == 'Valores Absolutos':
-                sns.countplot(data=data, x=attribute2, hue=attribute1, ax=ax)
+                sns.countplot(data=data, x=attribute2, hue=situation, ax=ax)
             else:
-                df_grouped = data.groupby(attribute2)[attribute1].value_counts(normalize=True).unstack().fillna(0) * 100
-                df_grouped.plot(kind='bar', stacked=False, ax=ax)
+                total = data.groupby(attribute2).size()
+                selected_situation = data[data['Situação no Curso'] == situation].groupby(attribute2).size()
+                percentage = (selected_situation / total * 100).fillna(0)
+                percentage.plot(kind='bar', ax=ax)
             ax.set_title(f'{attribute1} por {attribute2} (Situação: {situation})')
             ax.set_xlabel(attribute2)
             ax.set_ylabel('Count' if values_or_percentage == 'Valores Absolutos' else 'Percentage (%)')
@@ -116,7 +118,7 @@ elif selected_tab == "Interação entre variáveis":
                 ax.bar_label(container)
             st.pyplot(fig)
             # Exibindo a tabela
-            table = data.groupby([attribute2, attribute1]).size().unstack().fillna(0)
+            table = data.groupby([attribute2, 'Situação no Curso']).size().unstack().fillna(0)
             table['Total'] = table.sum(axis=1)
             table.loc['Total'] = table.sum()
             st.write(table)
