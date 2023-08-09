@@ -82,7 +82,7 @@ elif selected_tab == "Interação entre variáveis":
     
     st.sidebar.header("Visualização")
     # Situação do curso
-    situation = st.sidebar.selectbox('Selecione a situação do curso:', df['Situação no Curso'].unique())
+    situations = st.sidebar.multiselect('Selecione as situações do curso:', df['Situação no Curso'].unique())
 
     # Valores absolutos ou porcentagem
     values_or_percentage = st.sidebar.selectbox('Selecione a forma de exibição:', ['Valores Absolutos', 'Porcentagem'])
@@ -101,26 +101,29 @@ elif selected_tab == "Interação entre variáveis":
 
     # Botão para visualizar
     if st.sidebar.button('Visualizar'):
-        if attribute_values_1 and attribute_values_2:
+        if attribute_values_1 and attribute_values_2 and situations:
             fig, ax = plt.subplots(figsize=(15, 10))
-            data = df[df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2)]
+            data = df[df[attribute1].isin(attribute_values_1) & df[attribute2].isin(attribute_values_2) & df['Situação no Curso'].isin(situations)]
             if values_or_percentage == 'Valores Absolutos':
-                sns.countplot(data=data, x=attribute2, hue=situation, ax=ax)
+                sns.countplot(data=data, x=attribute2, hue='Situação no Curso', ax=ax)
             else:
+                # This will be a bit complex for percentage, as we'll need to compute the percentage per each situation
+                data_grouped = data.groupby([attribute2, 'Situação no Curso']).size().unstack(fill_value=0)
                 total = data.groupby(attribute2).size()
-                selected_situation = data[data['Situação no Curso'] == situation].groupby(attribute2).size()
-                percentage = (selected_situation / total * 100).fillna(0)
-                percentage.plot(kind='bar', ax=ax)
-            ax.set_title(f'{attribute1} por {attribute2} (Situação: {situation})')
+                data_percentage = (data_grouped.divide(total, axis=0) * 100).fillna(0)
+                data_percentage.plot(kind='bar', stacked=False, ax=ax)
+            
+            ax.set_title(f'{attribute1} por {attribute2}')
             ax.set_xlabel(attribute2)
             ax.set_ylabel('Count' if values_or_percentage == 'Valores Absolutos' else 'Percentage (%)')
             for container in ax.containers:
                 ax.bar_label(container)
             st.pyplot(fig)
+            
             # Exibindo a tabela
             table = data.groupby([attribute2, 'Situação no Curso']).size().unstack().fillna(0)
             table['Total'] = table.sum(axis=1)
             table.loc['Total'] = table.sum()
             st.write(table)
         else:
-            st.warning("Por favor, selecione valores para os atributos.")
+            st.warning("Por favor, selecione valores para os atributos e situações.")
